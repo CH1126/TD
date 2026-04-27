@@ -294,16 +294,13 @@
 
 <script>
 // ===== GAS 端點（改成你的部署網址）=====
-const GAS_URL='https://script.google.com/macros/s/AKfycby153XHrjvbiKJiK0UNMf_co9KBi_UTiDPb17hx4TXCldmsJyhtGfTlaI8UtFYoCFXbAQ/exec';
+const GAS_URL='https://script.google.com/macros/s/AKfycby153XHrjvbiKJiK0UNMf_co9KBi_UTiDPb17hx4TXCIdmsJyhtGfTlaI8UtFYoCFXbAQ/exec';
 
-// 寫入 Notion（no-cors 避免 GitHub Pages 的 CORS 問題）
+// 寫入 Notion（用 GET + URL 參數，避免 CORS 問題）
 function pushToNotion(payload){
-  fetch(GAS_URL,{
-    method:'POST',
-    mode:'no-cors',
-    headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify(payload)
-  }).catch(()=>{});
+  const params=encodeURIComponent(JSON.stringify(payload));
+  const url=GAS_URL+'?action=pushTech&data='+params;
+  fetch(url,{method:'GET',mode:'no-cors'}).catch(()=>{});
 }
 
 const REPAIR_TAGS=['換機油','換齒輪油','換煞車皮','換前輪','換後輪','換皮帶','換電瓶','換空濾'];
