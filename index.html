@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>技師工作記錄</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Bebas+Neue&display=swap');
+  :root {
+    --bg:#0f0f0f; --surface:#1a1a1a; --surface2:#242424; --border:#2e2e2e;
+    --accent:#f5a623; --accent2:#e8380d; --green:#2ecc71; --blue:#3498db;
+    --text:#f0f0f0; --text2:#999; --radius:14px;
+    --ts:#f5a623; --tl:#3b9eff; --ta:#2ecc71;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;min-height:100vh;max-width:480px;margin:0 auto;padding-bottom:120px;}
+
+  .header{background:var(--surface);border-bottom:2px solid var(--accent);padding:16px 20px 12px;position:sticky;top:0;z-index:100;}
+  .header-top{display:flex;justify-content:space-between;align-items:center;}
+  .logo{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--accent);letter-spacing:2px;}
+  .date-badge{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 12px;font-size:13px;color:var(--text2);}
+  .tab-bar{display:flex;gap:8px;margin-top:12px;}
+  .tab{flex:1;padding:10px 8px;border-radius:10px;border:2px solid var(--border);background:transparent;color:var(--text2);font-size:14px;font-weight:700;font-family:'Noto Sans TC',sans-serif;cursor:pointer;transition:all 0.2s;text-align:center;}
+  .tab.active{background:var(--accent);border-color:var(--accent);color:#000;}
+
+  .page{display:none;padding:16px;}
+  .page.active{display:block;}
+  .section-title{font-size:12px;font-weight:700;color:var(--text2);letter-spacing:2px;margin:20px 0 10px;}
+
+  .input-field{background:var(--surface2);border:2px solid var(--border);border-radius:var(--radius);padding:14px 16px;color:var(--text);font-size:18px;font-family:'Noto Sans TC',sans-serif;font-weight:700;outline:none;letter-spacing:2px;transition:border-color 0.2s;width:100%;}
+  .input-field::placeholder{color:var(--text2);font-weight:400;letter-spacing:0;font-size:15px;}
+  .input-field:focus{border-color:var(--accent);}
+
+  .search-box{position:relative;margin-bottom:14px;}
+  .search-box input{background:var(--surface2);border:2px solid var(--border);border-radius:var(--radius);padding:12px 16px 12px 42px;color:var(--text);font-size:16px;font-family:'Noto Sans TC',sans-serif;outline:none;width:100%;transition:border-color 0.2s;}
+  .search-box input::placeholder{color:var(--text2);}
+  .search-box input:focus{border-color:var(--accent);}
+  .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;pointer-events:none;}
+
+  .tech-selector{display:flex;gap:10px;margin-bottom:14px;}
+  .tech-btn{flex:1;padding:16px 8px;border-radius:var(--radius);border:3px solid transparent;font-size:18px;font-weight:900;font-family:'Noto Sans TC',sans-serif;cursor:pointer;text-align:center;transition:all 0.15s;opacity:0.4;}
+  .tech-btn.selected{opacity:1;transform:scale(1.04);}
+  .tech-btn:active{transform:scale(0.96);}
+  .tech-btn.sheng {background:rgba(245,166,35,0.15);border-color:var(--ts);color:var(--ts);}
+  .tech-btn.lun   {background:rgba(59,158,255,0.15);border-color:var(--tl);color:var(--tl);}
+  .tech-btn.sheng2{background:rgba(46,204,113,0.15);border-color:var(--ta);color:var(--ta);}
+  .tech-btn.sheng.selected {background:var(--ts);color:#000;}
+  .tech-btn.lun.selected   {background:var(--tl);color:#fff;}
+  .tech-btn.sheng2.selected{background:var(--ta);color:#000;}
+
+  .tags-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:8px;}
+  .tag-btn{background:var(--surface2);border:2px solid var(--border);border-radius:var(--radius);padding:14px 12px;color:var(--text);font-size:16px;font-weight:700;font-family:'Noto Sans TC',sans-serif;cursor:pointer;transition:all 0.15s;text-align:center;}
+  .tag-btn.selected{background:var(--accent);border-color:var(--accent);color:#000;}
+  .tag-btn:active{transform:scale(0.96);}
+
+  .item-amount-list{margin-bottom:14px;}
+  .item-amount-row{display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:8px;}
+  .item-amount-name{font-size:15px;font-weight:700;color:var(--text);flex:1;}
+  .item-amount-prefix{color:var(--text2);font-size:14px;margin-right:4px;}
+  .item-amount-input{background:transparent;border:none;border-bottom:2px solid var(--border);color:var(--accent);font-size:20px;font-weight:900;font-family:'Noto Sans TC',sans-serif;width:100px;text-align:right;outline:none;padding-bottom:2px;}
+  .item-amount-input:focus{border-bottom-color:var(--accent);}
+  .amount-total-bar{background:var(--surface2);border:2px solid var(--accent);border-radius:var(--radius);padding:14px 20px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
+  .amount-total-label{font-size:14px;color:var(--text2);font-weight:700;}
+  .amount-total-value{font-size:26px;font-weight:900;color:var(--accent);}
+
+  .btn-primary{width:100%;background:var(--accent);border:none;border-radius:var(--radius);padding:20px;color:#000;font-size:20px;font-weight:900;font-family:'Noto Sans TC',sans-serif;cursor:pointer;transition:all 0.2s;margin-top:8px;}
+  .btn-primary:active{transform:scale(0.98);opacity:0.9;}
+  .btn-primary.danger {background:var(--accent2);color:#fff;}
+  .btn-primary.success{background:var(--green);color:#fff;}
+  .btn-primary.secondary{background:var(--surface2);border:2px solid var(--border);color:var(--text);}
+
+  .tech-group{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:14px;overflow:hidden;}
+  .tech-group-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;}
+  .tech-group-name{font-size:17px;font-weight:900;}
+  .tech-group-name.sheng {color:var(--ts);}
+  .tech-group-name.lun   {color:var(--tl);}
+  .tech-group-name.sheng2{color:var(--ta);}
+  .tech-group-stats{font-size:13px;color:var(--text2);text-align:right;line-height:1.5;}
+  .tech-group-stats .stat-money{font-size:16px;font-weight:900;color:var(--green);display:block;}
+  .record-card{border-top:1px solid var(--border);padding:12px 16px;}
+  .record-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .record-plate{font-size:19px;font-weight:900;letter-spacing:2px;color:var(--accent);}
+  .record-time-small{font-size:12px;color:var(--text2);}
+  .record-item-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);}
+  .record-item-row:last-child{border-bottom:none;}
+  .record-item-name{font-size:14px;color:var(--text2);}
+  .record-item-amt{font-size:14px;font-weight:700;color:var(--green);}
+  .record-item-amt.zero{color:var(--text2);}
+  .record-subtotal-row{display:flex;justify-content:space-between;padding:7px 0 0;margin-top:3px;}
+  .record-subtotal-label{font-size:12px;color:var(--text2);}
+  .record-subtotal-amt{font-size:18px;font-weight:900;color:var(--green);}
+  .record-delete{background:transparent;border:none;color:var(--text2);font-size:18px;cursor:pointer;padding:2px 6px;}
+  .grand-total-bar{background:var(--surface2);border:2px solid var(--accent);border-radius:var(--radius);padding:14px 20px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
+  .grand-total-label{font-size:14px;color:var(--text2);font-weight:700;}
+  .grand-total-value{font-size:28px;font-weight:900;color:var(--accent);}
+
+  .stage-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px;}
+  .stage-btn{background:var(--surface2);border:2px solid var(--border);border-radius:var(--radius);padding:14px 10px;color:var(--text2);font-size:15px;font-weight:700;font-family:'Noto Sans TC',sans-serif;cursor:pointer;transition:all 0.15s;text-align:center;}
+  .stage-btn.selected{background:var(--blue);border-color:var(--blue);color:#fff;}
+  .stage-btn:active{transform:scale(0.96);}
+  .stage-sub-input{background:var(--surface2);border:2px solid var(--blue);border-radius:10px;padding:12px 14px;color:var(--text);font-size:15px;font-family:'Noto Sans TC',sans-serif;width:100%;outline:none;margin-bottom:10px;display:none;}
+  .stage-sub-input.visible{display:block;}
+  .stage-sub-input::placeholder{color:var(--text2);}
+
+  .inv-card{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--blue);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;}
+  .inv-card.done-card{border-left-color:#555;opacity:0.85;}
+  .inv-card.sold{border-left-color:var(--green);opacity:0.65;}
+  .inv-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+  .inv-plate{font-size:22px;font-weight:900;letter-spacing:2px;}
+  .inv-plate.sheng {color:var(--ts);}
+  .inv-plate.lun   {color:var(--tl);}
+  .inv-plate.sheng2{color:var(--ta);}
+  .inv-technician{font-size:13px;margin-top:3px;font-weight:700;}
+  .inv-technician.sheng {color:var(--ts);}
+  .inv-technician.lun   {color:var(--tl);}
+  .inv-technician.sheng2{color:var(--ta);}
+  .inv-stages-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+  .inv-stage-chip{background:var(--blue);color:#fff;border-radius:8px;padding:3px 10px;font-size:12px;font-weight:700;}
+  .inv-stage-chip.done-chip{background:var(--green);}
+  .inv-notes{font-size:13px;color:var(--text2);margin-top:8px;line-height:1.5;}
+
+  .history-toggle{font-size:12px;color:var(--text2);cursor:pointer;margin-top:8px;display:inline-block;text-decoration:underline;}
+  .history-wrap{display:none;}
+  .history-wrap.open{display:block;}
+  .history-list{margin-top:8px;}
+  .history-item{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;}
+  .history-item:last-child{border-bottom:none;}
+  .history-date{color:var(--text2);white-space:nowrap;min-width:90px;}
+  .history-body{color:var(--text);line-height:1.5;}
+  .history-tech{font-weight:700;}
+  .history-tech.sheng {color:var(--ts);}
+  .history-tech.lun   {color:var(--tl);}
+  .history-tech.sheng2{color:var(--ta);}
+
+  /* Deliver collapsible */
+  .deliver-toggle{display:flex;justify-content:space-between;align-items:center;background:rgba(46,204,113,0.12);border:2px solid var(--green);border-radius:10px;padding:12px 16px;margin-top:12px;cursor:pointer;user-select:none;}
+  .deliver-toggle-label{font-size:15px;font-weight:700;color:var(--green);}
+  .deliver-toggle-arrow{font-size:13px;color:var(--green);transition:transform 0.2s;}
+  .deliver-body{background:rgba(46,204,113,0.07);border:2px solid var(--green);border-top:none;border-radius:0 0 10px 10px;padding:14px;display:none;}
+  .deliver-body.open{display:block;}
+  .deliver-section-label{font-size:11px;font-weight:700;color:var(--text2);letter-spacing:2px;margin:12px 0 8px;}
+  .deliver-section-label:first-child{margin-top:0;}
+
+  /* Fee rows — fixed and custom share same layout */
+  .fee-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .fee-label{font-size:14px;color:var(--text2);min-width:70px;}
+  .fee-name-input{flex:1;background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:14px;font-family:'Noto Sans TC',sans-serif;outline:none;min-width:0;}
+  .fee-name-input:focus{border-color:var(--green);}
+  .fee-name-input::placeholder{color:var(--text2);}
+  .fee-prefix{color:var(--text2);font-size:13px;white-space:nowrap;}
+  .fee-amount-input{background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px 8px;color:var(--accent);font-size:16px;font-weight:700;font-family:'Noto Sans TC',sans-serif;width:90px;text-align:right;outline:none;}
+  .fee-amount-input:focus{border-color:var(--green);}
+  .fee-del{background:transparent;border:none;color:var(--text2);font-size:18px;cursor:pointer;padding:0 2px;flex-shrink:0;}
+
+  .btn-add-fee{background:transparent;border:2px dashed var(--border);border-radius:8px;padding:9px;color:var(--text2);font-size:14px;font-weight:700;font-family:'Noto Sans TC',sans-serif;cursor:pointer;width:100%;margin-bottom:10px;}
+  .btn-add-fee:active{border-color:var(--green);color:var(--green);}
+
+  .deliver-note-input{background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;font-family:'Noto Sans TC',sans-serif;width:100%;outline:none;margin-bottom:10px;}
+  .deliver-note-input::placeholder{color:var(--text2);}
+  .deliver-note-input:focus{border-color:var(--green);}
+  .btn-deliver{width:100%;background:var(--green);border:none;border-radius:10px;padding:16px;color:#000;font-size:18px;font-weight:900;font-family:'Noto Sans TC',sans-serif;cursor:pointer;}
+  .btn-deliver:active{transform:scale(0.97);}
+
+  .inv-actions{display:flex;gap:8px;margin-top:12px;}
+  .btn-small{flex:1;background:var(--surface2);border:2px solid var(--border);border-radius:10px;padding:10px;color:var(--text);font-size:14px;font-weight:700;font-family:'Noto Sans TC',sans-serif;cursor:pointer;text-align:center;transition:all 0.15s;}
+  .btn-small.blue  {border-color:var(--blue);   color:var(--blue);}
+  .btn-small.danger{border-color:var(--accent2);color:var(--accent2);}
+  .btn-small:active{transform:scale(0.96);}
+
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;align-items:flex-end;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:480px;border-top:3px solid var(--accent);animation:slideUp 0.25s ease;max-height:90vh;overflow-y:auto;}
+  @keyframes slideUp{from{transform:translateY(60px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .modal-title{font-size:20px;font-weight:900;margin-bottom:16px;color:var(--accent);}
+
+  .report-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;font-size:14px;line-height:1.8;white-space:pre-wrap;word-break:break-all;color:var(--text);min-height:200px;margin-bottom:16px;font-family:monospace;}
+
+  .empty-state{text-align:center;padding:40px 20px;color:var(--text2);font-size:15px;}
+  .empty-icon{font-size:40px;margin-bottom:12px;}
+  .toast{position:fixed;bottom:130px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--green);color:#000;font-weight:700;padding:12px 24px;border-radius:100px;font-size:15px;opacity:0;transition:all 0.3s;z-index:300;white-space:nowrap;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .separator{height:1px;background:var(--border);margin:20px 0;}
+  .warn-banner{background:rgba(232,56,13,0.15);border:2px solid var(--accent2);border-radius:10px;padding:10px 14px;font-size:14px;color:var(--accent2);font-weight:700;margin-bottom:12px;display:none;}
+  .warn-banner.visible{display:block;}
+  .done-section-label{font-size:11px;font-weight:700;color:#666;letter-spacing:1px;margin:16px 0 8px;padding-left:2px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="logo">MOTO LOG</div>
+    <div class="date-badge" id="dateBadge"></div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab active" onclick="switchTab('repair')">🔧 維修保養</button>
+    <button class="tab" onclick="switchTab('prep')">🏍️ 整備車</button>
+    <button class="tab" onclick="switchTab('report')">📋 日報</button>
+  </div>
+</div>
+
+<!-- 維修保養 -->
+<div class="page active" id="page-repair">
+  <div class="section-title">技師</div>
+  <div class="tech-selector" id="repairTechSel">
+    <button class="tech-btn sheng"  onclick="selRepairTech('阿晟','sheng',this)">阿晟</button>
+    <button class="tech-btn lun"    onclick="selRepairTech('阿倫','lun',this)">阿倫</button>
+    <button class="tech-btn sheng2" onclick="selRepairTech('阿昇','sheng2',this)">阿昇</button>
+  </div>
+  <div class="section-title">車牌號碼</div>
+  <input class="input-field" id="repairPlate" placeholder="如 ABC-1234" maxlength="10" style="margin-bottom:14px;" oninput="this.value=this.value.toUpperCase()">
+  <div class="section-title">維修項目（點選後填金額）</div>
+  <div class="tags-grid" id="tagsGrid"></div>
+  <div class="item-amount-list" id="itemAmountList"></div>
+  <div class="amount-total-bar">
+    <div class="amount-total-label">本次合計</div>
+    <div class="amount-total-value" id="itemTotal">NT$ 0</div>
+  </div>
+  <button class="btn-primary" onclick="addRepairRecord()">✅ 送出記錄</button>
+  <div class="separator"></div>
+  <div class="section-title">今日維修紀錄</div>
+  <div id="repairList"></div>
+</div>
+
+<!-- 整備車 -->
+<div class="page" id="page-prep">
+  <div class="section-title">搜尋車號</div>
+  <div class="search-box">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="prepSearch" placeholder="輸入車牌搜尋…" oninput="renderPrepList()">
+  </div>
+  <button class="btn-primary secondary" onclick="openAddPrepModal()" style="margin-bottom:16px;">＋ 新增整備車</button>
+  <div id="prepList"></div>
+</div>
+
+<!-- 日報 -->
+<div class="page" id="page-report">
+  <div class="section-title">技師日報預覽</div>
+  <div class="report-box" id="reportContent"></div>
+  <button class="btn-primary" onclick="copyReport()">📋 複製日報（貼到 LINE）</button>
+</div>
+
+<!-- Modal：新增整備車 -->
+<div class="modal-overlay" id="addPrepModal">
+  <div class="modal">
+    <div class="modal-title">新增整備車</div>
+    <div class="warn-banner" id="dupWarn">⚠️ 此車牌已在整備清單中！</div>
+    <div class="section-title">技師</div>
+    <div class="tech-selector" id="addPrepTechSel">
+      <button class="tech-btn sheng"  onclick="selModalTech('add','阿晟','sheng',this)">阿晟</button>
+      <button class="tech-btn lun"    onclick="selModalTech('add','阿倫','lun',this)">阿倫</button>
+      <button class="tech-btn sheng2" onclick="selModalTech('add','阿昇','sheng2',this)">阿昇</button>
+    </div>
+    <div class="section-title">車牌號碼</div>
+    <input class="input-field" id="prepPlate" placeholder="如 ABC-1234" maxlength="10" style="margin-bottom:14px;"
+      oninput="this.value=this.value.toUpperCase();checkDuplicate(this.value)">
+    <div class="section-title">目前階段（可複選）</div>
+    <div class="stage-grid" id="addStageGrid"></div>
+    <input class="stage-sub-input" id="addWaitDetail" placeholder="等什麼零件？請說明">
+    <input class="stage-sub-input" id="addOtherDetail" placeholder="其他說明…">
+    <div class="section-title">備註（選填）</div>
+    <input class="input-field" id="prepNotes" placeholder="備註" style="margin-bottom:14px;">
+    <div style="display:flex;gap:10px;">
+      <button class="btn-primary secondary" onclick="closeModal('addPrepModal')" style="flex:1;padding:16px;">取消</button>
+      <button class="btn-primary" onclick="savePrepVehicle()" style="flex:2;padding:16px;">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal：更新整備進度 -->
+<div class="modal-overlay" id="editPrepModal">
+  <div class="modal">
+    <div class="modal-title" id="editModalTitle">更新整備進度</div>
+    <div class="section-title">接手技師</div>
+    <div class="tech-selector" id="editPrepTechSel">
+      <button class="tech-btn sheng"  onclick="selModalTech('edit','阿晟','sheng',this)">阿晟</button>
+      <button class="tech-btn lun"    onclick="selModalTech('edit','阿倫','lun',this)">阿倫</button>
+      <button class="tech-btn sheng2" onclick="selModalTech('edit','阿昇','sheng2',this)">阿昇</button>
+    </div>
+    <div class="section-title">目前階段（可複選）</div>
+    <div class="stage-grid" id="editStageGrid"></div>
+    <input class="stage-sub-input" id="editWaitDetail" placeholder="等什麼零件？請說明">
+    <input class="stage-sub-input" id="editOtherDetail" placeholder="其他說明…">
+    <div class="section-title">追加備註（選填）</div>
+    <input class="input-field" id="editNotes" placeholder="備註" style="margin-bottom:14px;">
+    <div style="display:flex;gap:10px;">
+      <button class="btn-primary secondary" onclick="closeModal('editPrepModal')" style="flex:1;padding:16px;">取消</button>
+      <button class="btn-primary" onclick="updatePrepVehicle()" style="flex:2;padding:16px;">更新進度</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== GAS 端點（改成你的部署網址）=====
+const GAS_URL='https://script.google.com/macros/s/AKfycbxDc2Jlz48oaLqLIWmolbEsKpxiBMektQSLBweSo1bFSjv8R_Jbb_S9j523cMoBhK1PHA/exec';
+
+// 寫入 Notion（背景執行，失敗不影響工具操作）
+function pushToNotion(payload){
+  fetch(GAS_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  }).catch(()=>{});
+}
+
+const REPAIR_TAGS=['換機油','換齒輪油','換煞車皮','換前輪','換後輪','換皮帶','換電瓶','換空濾'];
+const PREP_STAGES=[
+  {key:'叫耗材',  label:'叫耗材',    sub:null},
+  {key:'洗車',    label:'洗車',      sub:null},
+  {key:'拆件',    label:'拆件',      sub:null},
+  {key:'送烤漆',  label:'送烤漆',    sub:null},
+  {key:'噴漆',    label:'噴漆',      sub:null},
+  {key:'回裝',    label:'回裝',      sub:null},
+  {key:'擦矽油',  label:'擦矽油',    sub:null},
+  {key:'等零件',  label:'等零件 ⋯', sub:'waiting'},
+  {key:'拆裝引擎',label:'拆裝引擎',  sub:null},
+  {key:'其他',    label:'其他 ✏️',  sub:'other'},
+  {key:'試車',    label:'試車',      sub:null},
+  {key:'整備完成',label:'整備完成 ✓',sub:null},
+];
+const TECH_CLASS={'阿晟':'sheng','阿倫':'lun','阿昇':'sheng2'};
+const TECH_NAMES=['阿晟','阿倫','阿昇'];
+
+let repairRecords=JSON.parse(localStorage.getItem('repairRecords')||'[]');
+let prepVehicles =JSON.parse(localStorage.getItem('prepVehicles') ||'[]');
+
+let rTechName='',rTechCls='';
+let selTags=[],itemAmounts={};
+let addTechName='',addTechCls='',addSelStages=new Set();
+let editTechName='',editTechCls='',editSelStages=new Set(),editingId=null;
+
+// In-memory custom fees per vehicle id: { [vid]: [{name,amount},...] }
+const customFeeMap={};
+
+function p(n){return String(n).padStart(2,'0');}
+function getToday(){const d=new Date();return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+function getNow(){const d=new Date();return p(d.getHours())+':'+p(d.getMinutes());}
+function save(){localStorage.setItem('repairRecords',JSON.stringify(repairRecords));localStorage.setItem('prepVehicles',JSON.stringify(prepVehicles));}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function showToast(msg,color){const t=document.getElementById('toast');t.textContent=msg;t.style.background=color||'var(--green)';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+function init(){
+  const now=new Date();
+  document.getElementById('dateBadge').textContent=now.getFullYear()+'/'+p(now.getMonth()+1)+'/'+p(now.getDate());
+  buildTagsGrid();
+  buildStageGrid('addStageGrid','add');
+  buildStageGrid('editStageGrid','edit');
+  renderRepairList();
+  renderPrepList();
+  renderReport();
+}
+
+function switchTab(tab){
+  ['repair','prep','report'].forEach((t,i)=>{
+    document.querySelectorAll('.tab')[i].classList.toggle('active',t===tab);
+    document.getElementById('page-'+t).classList.toggle('active',t===tab);
+  });
+  if(tab==='report') renderReport();
+}
+
+/* ── Tech ── */
+function selRepairTech(name,cls,btn){
+  rTechName=name;rTechCls=cls;
+  document.querySelectorAll('#repairTechSel .tech-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+function selModalTech(mode,name,cls,btn){
+  if(mode==='add'){addTechName=name;addTechCls=cls;document.querySelectorAll('#addPrepTechSel .tech-btn').forEach(b=>b.classList.remove('selected'));}
+  else{editTechName=name;editTechCls=cls;document.querySelectorAll('#editPrepTechSel .tech-btn').forEach(b=>b.classList.remove('selected'));}
+  btn.classList.add('selected');
+}
+
+/* ── Repair ── */
+function buildTagsGrid(){
+  const g=document.getElementById('tagsGrid');g.innerHTML='';
+  REPAIR_TAGS.forEach(tag=>{
+    const b=document.createElement('button');b.className='tag-btn';b.textContent=tag;
+    b.onclick=()=>toggleTag(tag,b);g.appendChild(b);
+  });
+}
+function toggleTag(tag,btn){
+  if(selTags.includes(tag)){selTags=selTags.filter(t=>t!==tag);delete itemAmounts[tag];btn.classList.remove('selected');}
+  else{selTags.push(tag);itemAmounts[tag]='';btn.classList.add('selected');}
+  renderAmountList();
+}
+function renderAmountList(){
+  const list=document.getElementById('itemAmountList');
+  if(!selTags.length){list.innerHTML='';calcTotal();return;}
+  list.innerHTML=selTags.map(tag=>`
+    <div class="item-amount-row">
+      <div class="item-amount-name">${tag}</div>
+      <span class="item-amount-prefix">NT$</span>
+      <input class="item-amount-input" type="number" inputmode="numeric" placeholder="0"
+        value="${itemAmounts[tag]||''}"
+        oninput="itemAmounts['${tag}']=this.value;calcTotal()">
+    </div>`).join('');
+  calcTotal();
+}
+function calcTotal(){
+  const t=selTags.reduce((s,tag)=>s+(parseInt(itemAmounts[tag])||0),0);
+  document.getElementById('itemTotal').textContent='NT$ '+t.toLocaleString();
+}
+function addRepairRecord(){
+  const plate=document.getElementById('repairPlate').value.trim();
+  if(!rTechName){showToast('請選擇技師','#e8380d');return;}
+  if(!plate){showToast('請輸入車牌','#e8380d');return;}
+  if(!selTags.length){showToast('請選擇維修項目','#e8380d');return;}
+  const items=selTags.map(tag=>({name:tag,amount:parseInt(itemAmounts[tag])||0}));
+  const total=items.reduce((s,i)=>s+i.amount,0);
+  repairRecords.unshift({id:Date.now(),plate,tech:rTechName,techClass:rTechCls,items,total,time:getNow(),date:getToday()});
+  save();
+  // 寫入 Notion
+  pushToNotion({action:'pushTech',type:'維修保養',plate,tech:rTechName,items,date:getToday()});
+  document.getElementById('repairPlate').value='';
+  selTags=[];itemAmounts={};
+  document.querySelectorAll('.tag-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('itemAmountList').innerHTML='';
+  document.getElementById('itemTotal').textContent='NT$ 0';
+  renderRepairList();showToast('✅ 已新增 '+plate);
+}
+function delRepair(id){repairRecords=repairRecords.filter(r=>r.id!==id);save();renderRepairList();}
+function renderRepairList(){
+  const today=getToday();
+  const recs=repairRecords.filter(r=>r.date===today);
+  const list=document.getElementById('repairList');
+  if(!recs.length){list.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div>今日尚無維修紀錄</div>';return;}
+  const order=[],groups={};
+  recs.forEach(r=>{const t=r.tech||'未指定';if(!groups[t]){groups[t]=[];order.push(t);}groups[t].push(r);});
+  const grandTotal=recs.reduce((s,r)=>s+(r.total||0),0);
+  let html='';
+  order.forEach(tech=>{
+    const cls=TECH_CLASS[tech]||'';
+    const tr=groups[tech];
+    const tt=tr.reduce((s,r)=>s+(r.total||0),0);
+    html+=`<div class="tech-group">
+      <div class="tech-group-header">
+        <div class="tech-group-name ${cls}">${tech}</div>
+        <div class="tech-group-stats"><span>${tr.length} 台</span><span class="stat-money">NT$${tt.toLocaleString()}</span></div>
+      </div>`;
+    tr.forEach(r=>{
+      const ih=(r.items||[]).map(i=>`
+        <div class="record-item-row">
+          <span class="record-item-name">${i.name}</span>
+          <span class="record-item-amt ${i.amount===0?'zero':''}">${i.amount>0?'NT$'+i.amount.toLocaleString():'—'}</span>
+        </div>`).join('');
+      html+=`<div class="record-card">
+        <div class="record-card-top">
+          <div class="record-plate">${r.plate}</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="record-time-small">${r.time}</span>
+            <button class="record-delete" onclick="delRepair(${r.id})">✕</button>
+          </div>
+        </div>
+        <div>${ih}</div>
+        <div class="record-subtotal-row"><span class="record-subtotal-label">小計</span><span class="record-subtotal-amt">NT$${(r.total||0).toLocaleString()}</span></div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  html+=`<div class="grand-total-bar"><div class="grand-total-label">📊 今日總收入</div><div class="grand-total-value">NT$${grandTotal.toLocaleString()}</div></div>`;
+  list.innerHTML=html;
+}
+
+/* ── Prep stages ── */
+function buildStageGrid(cid,mode){
+  const g=document.getElementById(cid);g.innerHTML='';
+  PREP_STAGES.forEach(s=>{
+    const b=document.createElement('button');b.className='stage-btn';b.textContent=s.label;b.dataset.key=s.key;
+    b.onclick=()=>toggleStage(s,b,mode);g.appendChild(b);
+  });
+}
+function toggleStage(s,btn,mode){
+  const set=mode==='add'?addSelStages:editSelStages;
+  if(set.has(s.key)){set.delete(s.key);btn.classList.remove('selected');}
+  else{set.add(s.key);btn.classList.add('selected');}
+  updateSubInputs(mode);
+}
+function updateSubInputs(mode){
+  const pfx=mode==='add'?'add':'edit';
+  const set=mode==='add'?addSelStages:editSelStages;
+  document.getElementById(pfx+'WaitDetail').classList.toggle('visible',set.has('等零件'));
+  document.getElementById(pfx+'OtherDetail').classList.toggle('visible',set.has('其他'));
+}
+
+/* ── Duplicate ── */
+function checkDuplicate(plate){
+  const exists=prepVehicles.some(v=>v.status==='active'&&v.plate===plate.trim());
+  document.getElementById('dupWarn').classList.toggle('visible',exists&&plate.length>2);
+}
+
+/* ── Prep CRUD ── */
+function openAddPrepModal(){
+  addTechName='';addTechCls='';addSelStages=new Set();
+  ['prepPlate','prepNotes','addWaitDetail','addOtherDetail'].forEach(id=>document.getElementById(id).value='');
+  ['addWaitDetail','addOtherDetail'].forEach(id=>document.getElementById(id).classList.remove('visible'));
+  document.getElementById('dupWarn').classList.remove('visible');
+  document.querySelectorAll('#addStageGrid .stage-btn,#addPrepTechSel .tech-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('addPrepModal').classList.add('open');
+}
+function savePrepVehicle(){
+  const plate=document.getElementById('prepPlate').value.trim();
+  const notes=document.getElementById('prepNotes').value.trim();
+  const waitD=document.getElementById('addWaitDetail').value.trim();
+  const othD =document.getElementById('addOtherDetail').value.trim();
+  if(!addTechName){showToast('請選擇技師','#e8380d');return;}
+  if(!plate){showToast('請輸入車牌','#e8380d');return;}
+  if(prepVehicles.some(v=>v.status==='active'&&v.plate===plate)){showToast('此車牌已在整備清單中！','#e8380d');return;}
+  if(!addSelStages.size){showToast('請選擇至少一個階段','#e8380d');return;}
+  const stages=Array.from(addSelStages);
+  const stageDetails={};
+  if(addSelStages.has('等零件')) stageDetails['等零件']=waitD;
+  if(addSelStages.has('其他'))   stageDetails['其他']=othD;
+  const histEntry={date:getToday(),time:getNow(),tech:addTechName,techClass:addTechCls,stages,stageDetails,notes};
+  prepVehicles.unshift({id:Date.now(),plate,tech:addTechName,techClass:addTechCls,stages,stageDetails,notes,history:[histEntry],status:'active',createdDate:getToday()});
+  save();
+  // 寫入 Notion
+  pushToNotion({action:'pushTech',type:'整備車',plate,tech:addTechName,stages,note:notes,date:getToday()});
+  closeModal('addPrepModal');renderPrepList();showToast('🏍️ 已新增 '+plate);
+}
+function openEditPrepModal(id){
+  editingId=id;editTechName='';editTechCls='';editSelStages=new Set();
+  const v=prepVehicles.find(v=>v.id===id);
+  document.getElementById('editModalTitle').textContent=v.plate+' — 更新進度';
+  ['editNotes','editWaitDetail','editOtherDetail'].forEach(i=>document.getElementById(i).value='');
+  ['editWaitDetail','editOtherDetail'].forEach(i=>document.getElementById(i).classList.remove('visible'));
+  document.querySelectorAll('#editStageGrid .stage-btn,#editPrepTechSel .tech-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('editPrepModal').classList.add('open');
+}
+function updatePrepVehicle(){
+  if(!editTechName){showToast('請選擇接手技師','#e8380d');return;}
+  if(!editSelStages.size){showToast('請選擇至少一個階段','#e8380d');return;}
+  const notes=document.getElementById('editNotes').value.trim();
+  const waitD=document.getElementById('editWaitDetail').value.trim();
+  const othD =document.getElementById('editOtherDetail').value.trim();
+  const stages=Array.from(editSelStages);
+  const stageDetails={};
+  if(editSelStages.has('等零件')) stageDetails['等零件']=waitD;
+  if(editSelStages.has('其他'))   stageDetails['其他']=othD;
+  const v=prepVehicles.find(v=>v.id===editingId);
+  v.tech=editTechName;v.techClass=editTechCls;v.stages=stages;v.stageDetails=stageDetails;
+  if(notes) v.notes=(v.notes?v.notes+'\n'+notes:notes);
+  v.history.push({date:getToday(),time:getNow(),tech:editTechName,techClass:editTechCls,stages,stageDetails,notes});
+  save();
+  // 寫入 Notion
+  pushToNotion({action:'pushTech',type:'整備車',plate:v.plate,tech:editTechName,stages,note:notes,date:getToday()});
+  closeModal('editPrepModal');renderPrepList();showToast('✅ 已更新 '+v.plate);
+}
+function delPrep(id){prepVehicles=prepVehicles.filter(v=>v.id!==id);delete customFeeMap[id];save();renderPrepList();}
+
+/* ── Deliver toggle ── */
+function toggleDeliverBox(id){
+  const body=document.getElementById('dBody-'+id);
+  const arrow=document.getElementById('dArrow-'+id);
+  if(!body)return;
+  const open=body.classList.toggle('open');
+  arrow.textContent=open?'▲':'▼';
+}
+
+/* ── Custom fees ── */
+function addCustomFee(vid){
+  if(!customFeeMap[vid]) customFeeMap[vid]=[];
+  customFeeMap[vid].push({name:'',amount:''});
+  refreshCustomFees(vid);
+}
+function removeCustomFee(vid,idx){
+  customFeeMap[vid].splice(idx,1);
+  refreshCustomFees(vid);
+}
+function refreshCustomFees(vid){
+  const cont=document.getElementById('dCustom-'+vid);
+  if(!cont)return;
+  const fees=customFeeMap[vid]||[];
+  cont.innerHTML=fees.map((f,i)=>`
+    <div class="fee-row">
+      <input class="fee-name-input" placeholder="項目名稱" value="${escHtml(f.name)}"
+        oninput="customFeeMap[${vid}][${i}].name=this.value">
+      <span class="fee-prefix">NT$</span>
+      <input class="fee-amount-input" type="number" inputmode="numeric" placeholder="0" value="${f.amount}"
+        oninput="customFeeMap[${vid}][${i}].amount=this.value">
+      <button class="fee-del" onclick="removeCustomFee(${vid},${i})">✕</button>
+    </div>`).join('');
+}
+function escHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+/* ── Deliver tech select (inside card) ── */
+function selDeliverTech(vid,name,btn){
+  document.querySelectorAll('#dTechSel-'+vid+' .tech-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+/* ── Do deliver ── */
+function doDeliver(vid){
+  const v=prepVehicles.find(v=>v.id===vid);
+  if(!v){showToast('找不到資料','#e8380d');return;}
+  // tech
+  const selBtn=document.querySelector('#dTechSel-'+vid+' .tech-btn.selected');
+  const dTechName=selBtn?selBtn.textContent.trim():v.tech;
+  const dTechCls=TECH_CLASS[dTechName]||'';
+  // fees
+  const fuel=parseInt((document.getElementById('dFuel-'+vid)||{}).value)||0;
+  const key =parseInt((document.getElementById('dKey-'+vid) ||{}).value)||0;
+  const note=((document.getElementById('dNote-'+vid)||{}).value||'').trim();
+  const cFees=(customFeeMap[vid]||[]).filter(f=>f.name.trim());
+  const extraFees=[];
+  if(fuel>0) extraFees.push({name:'加油',amount:fuel});
+  if(key>0)  extraFees.push({name:'打鑰匙',amount:key});
+  cFees.forEach(f=>extraFees.push({name:f.name.trim(),amount:parseInt(f.amount)||0}));
+  v.status='delivered';v.deliveredDate=getToday();v.deliveredTime=getNow();
+  v.deliveredTech=dTechName;v.deliveredTechClass=dTechCls;
+  v.extraFees=extraFees;v.deliverNote=note;
+  const feeStr=extraFees.length?' 追加費用：'+extraFees.map(f=>f.name+(f.amount>0?'$'+f.amount:'')).join('、'):'';
+  v.history.push({date:getToday(),time:getNow(),tech:dTechName,techClass:dTechCls,stages:['🏁 交車完成'],stageDetails:{},notes:note+feeStr});
+  delete customFeeMap[vid];
+  save();
+  // 寫入 Notion
+  const extraTotal=extraFees.reduce((s,f)=>s+(f.amount||0),0);
+  pushToNotion({action:'pushTech',type:'交車',plate:v.plate,tech:dTechName,extraFees,extraTotal,note,date:getToday()});
+  renderPrepList();showToast('🏁 '+v.plate+' 交車完成！','#2ecc71');
+}
+
+/* ── History toggle ── */
+function toggleHistory(id){
+  const el=document.getElementById('hist-'+id);
+  const lnk=document.getElementById('histlnk-'+id);
+  if(!el)return;
+  el.classList.toggle('open');
+  lnk.textContent=el.classList.contains('open')?'▲ 收起歷史':'▼ 查看歷史進程';
+}
+
+/* ── Render prep list ── */
+function renderPrepList(){
+  const sq=((document.getElementById('prepSearch')||{}).value||'').toUpperCase().trim();
+  let active   =prepVehicles.filter(v=>v.status==='active');
+  let delivered=prepVehicles.filter(v=>v.status==='delivered'&&v.deliveredDate===getToday());
+  if(sq){active=active.filter(v=>v.plate.includes(sq));delivered=delivered.filter(v=>v.plate.includes(sq));}
+
+  const notDone=active.filter(v=>!(v.stages||[v.stage]).includes('整備完成'));
+  const done   =active.filter(v=> (v.stages||[v.stage]).includes('整備完成'));
+
+  function stageLabel(s,det){
+    if(s==='等零件'&&det?.['等零件']) return `等零件（${det['等零件']}）`;
+    if(s==='其他'&&det?.['其他'])     return `其他（${det['其他']}）`;
+    return s;
+  }
+
+  function renderCard(v){
+    const cls=v.techClass||TECH_CLASS[v.tech]||'';
+    const stages=v.stages||[v.stage];
+    const isDone=stages.includes('整備完成');
+    const chipsHtml=stages.map(s=>`<span class="inv-stage-chip ${isDone?'done-chip':''}">${stageLabel(s,v.stageDetails)}</span>`).join('');
+    const histHtml=(v.history||[]).map(h=>{
+      const hs=h.stages||[];
+      const hl=hs.map(s=>stageLabel(s,h.stageDetails)).join('、');
+      const hc=TECH_CLASS[h.tech]||'';
+      return `<div class="history-item">
+        <div class="history-date">${h.date} ${h.time}</div>
+        <div class="history-body"><span class="history-tech ${hc}">${h.tech||''}</span>｜${hl}${h.notes?' ／'+h.notes:''}</div>
+      </div>`;
+    }).join('');
+
+    const deliverBlock=isDone?`
+      <div class="deliver-toggle" onclick="toggleDeliverBox(${v.id})">
+        <span class="deliver-toggle-label">🏁 交車</span>
+        <span class="deliver-toggle-arrow" id="dArrow-${v.id}">▼</span>
+      </div>
+      <div class="deliver-body" id="dBody-${v.id}">
+        <div class="deliver-section-label">交車技師</div>
+        <div class="tech-selector" id="dTechSel-${v.id}" style="margin-bottom:4px;">
+          <button class="tech-btn sheng"  onclick="selDeliverTech(${v.id},'阿晟',this)">阿晟</button>
+          <button class="tech-btn lun"    onclick="selDeliverTech(${v.id},'阿倫',this)">阿倫</button>
+          <button class="tech-btn sheng2" onclick="selDeliverTech(${v.id},'阿昇',this)">阿昇</button>
+        </div>
+        <div class="deliver-section-label">追加費用</div>
+        <div class="fee-row">
+          <span class="fee-label">⛽ 加油</span>
+          <span class="fee-prefix">NT$</span>
+          <input class="fee-amount-input" id="dFuel-${v.id}" type="number" inputmode="numeric" placeholder="0">
+        </div>
+        <div class="fee-row">
+          <span class="fee-label">🔑 打鑰匙</span>
+          <span class="fee-prefix">NT$</span>
+          <input class="fee-amount-input" id="dKey-${v.id}" type="number" inputmode="numeric" placeholder="0">
+        </div>
+        <div id="dCustom-${v.id}"></div>
+        <button class="btn-add-fee" onclick="addCustomFee(${v.id})">＋ 新增項目（自訂名稱＋金額）</button>
+        <div class="deliver-section-label">備註</div>
+        <input class="deliver-note-input" id="dNote-${v.id}" placeholder="交車備註（選填）">
+        <button class="btn-deliver" onclick="doDeliver(${v.id})">🏁 確認交車完成</button>
+      </div>` : '';
+
+    return `<div class="inv-card ${isDone?'done-card':''}">
+      <div class="inv-card-header">
+        <div>
+          <div class="inv-plate ${cls}">${v.plate}</div>
+          <div class="inv-technician ${cls}">👨‍🔧 ${v.tech||''}</div>
+        </div>
+      </div>
+      <div class="inv-stages-wrap">${chipsHtml}</div>
+      ${v.notes?`<div class="inv-notes">📝 ${v.notes}</div>`:''}
+      <span class="history-toggle" id="histlnk-${v.id}" onclick="toggleHistory(${v.id})">▼ 查看歷史進程</span>
+      <div class="history-wrap" id="hist-${v.id}"><div class="history-list">${histHtml}</div></div>
+      ${deliverBlock}
+      <div class="inv-actions">
+        <button class="btn-small blue" onclick="openEditPrepModal(${v.id})">更新進度</button>
+        <button class="btn-small danger" onclick="delPrep(${v.id})">刪除</button>
+      </div>
+    </div>`;
+  }
+
+  let html='';
+  if(!notDone.length&&!done.length&&!delivered.length){
+    html='<div class="empty-state"><div class="empty-icon">🏍️</div>'+(sq?'找不到符合的車牌':'目前沒有整備車')+'</div>';
+  }
+  notDone.forEach(v=>{html+=renderCard(v);});
+  if(done.length){
+    html+=`<div class="done-section-label">── 整備完成（待交車）</div>`;
+    done.forEach(v=>{html+=renderCard(v);});
+  }
+  if(delivered.length){
+    html+=`<div class="section-title" style="margin-top:24px;">今日交車</div>`;
+    delivered.forEach(v=>{
+      const cls=v.deliveredTechClass||TECH_CLASS[v.deliveredTech]||TECH_CLASS[v.tech]||'';
+      const dtech=v.deliveredTech||v.tech||'';
+      const extraStr=(v.extraFees||[]).map(f=>`${f.name}${f.amount>0?' NT$'+f.amount.toLocaleString():''}`).join('、');
+      html+=`<div class="inv-card sold">
+        <div class="inv-card-header">
+          <div><div class="inv-plate ${cls}">${v.plate}</div><div class="inv-technician ${cls}">👨‍🔧 ${dtech}</div></div>
+          <span class="inv-stage-chip done-chip">✓ ${v.deliveredTime||''}</span>
+        </div>
+        ${extraStr?`<div class="inv-notes">💰 追加：${extraStr}</div>`:''}
+        ${v.deliverNote?`<div class="inv-notes">📝 ${v.deliverNote}</div>`:''}
+      </div>`;
+    });
+  }
+  document.getElementById('prepList').innerHTML=html;
+}
+
+/* ── Report ── */
+function stageLabel(s,det){
+  if(s==='等零件'&&det?.['等零件']) return `等零件（${det['等零件']}）`;
+  if(s==='其他'&&det?.['其他'])     return `其他（${det['其他']}）`;
+  return s;
+}
+
+function renderReport(){
+  const today=getToday();
+  const recs    =repairRecords.filter(r=>r.date===today);
+  const active  =prepVehicles.filter(v=>v.status==='active');
+  const delivered=prepVehicles.filter(v=>v.status==='delivered'&&v.deliveredDate===today);
+  const grandTotal=recs.reduce((s,r)=>s+(r.total||0),0);
+  const now=new Date();
+  const months=['1','2','3','4','5','6','7','8','9','10','11','12'];
+  const days=['日','一','二','三','四','五','六'];
+  const dateStr=now.getMonth()+1+'月'+now.getDate()+'日';
+  const dayStr='（'+['日','一','二','三','四','五','六'][now.getDay()]+'）';
+  let txt=`🔺 ${dateStr}${dayStr} 技師日報 🔺\n\n`;
+
+  // 1. 保養維修
+  txt+=`🔧【保養維修】\n`;
+  let hasRepair=false;
+  TECH_NAMES.forEach(tech=>{
+    const tr=recs.filter(r=>r.tech===tech);
+    if(!tr.length)return;
+    hasRepair=true;
+    txt+=`👉${tech}：\n`;
+    tr.forEach((r,i)=>{
+      txt+=` (${i+1}) ${r.plate}\n`;
+      (r.items||[]).forEach(item=>{
+        txt+=`   ${item.name}${item.amount>0?' $'+item.amount.toLocaleString():''}\n`;
+      });
+    });
+  });
+  if(!hasRepair) txt+=` （無）\n`;
+  if(grandTotal>0) txt+=`💰 當日收入：NT$${grandTotal.toLocaleString()}\n`;
+
+  txt+=`\n`;
+
+  // 2. 整備進度
+  txt+=`🏍️【整備進度】\n`;
+  let hasPrep=false;
+  const prepByTech={};
+  active.forEach(v=>{
+    const todayHist=(v.history||[]).filter(h=>h.date===today);
+    if(!todayHist.length)return;
+    todayHist.forEach(h=>{
+      const t=h.tech||'未指定';
+      if(!prepByTech[t]) prepByTech[t]=[];
+      let pe=prepByTech[t].find(x=>x.plate===v.plate);
+      if(!pe){pe={plate:v.plate,lines:[]};prepByTech[t].push(pe);}
+      const ss=(h.stages||[]).map(s=>stageLabel(s,h.stageDetails)).join('、');
+      pe.lines.push(ss+(h.notes?' ／'+h.notes:''));
+    });
+  });
+  TECH_NAMES.forEach(tech=>{
+    if(!prepByTech[tech])return;
+    hasPrep=true;
+    txt+=`👉${tech}：\n`;
+    prepByTech[tech].forEach(pe=>{
+      if(pe.lines.length===1){
+        txt+=` ${pe.plate} ${pe.lines[0]}\n`;
+      } else {
+        txt+=` ${pe.plate}\n`;
+        pe.lines.forEach(l=>{ txt+=`   ${l}\n`; });
+      }
+    });
+  });
+  if(!hasPrep) txt+=` （無）\n`;
+
+  txt+=`\n`;
+
+  // 3. 交車
+  txt+=`🏁【交車狀況】\n`;
+  let hasDeliver=false;
+  TECH_NAMES.forEach(tech=>{
+    const dv=delivered.filter(v=>(v.deliveredTech||v.tech)===tech);
+    if(!dv.length)return;
+    hasDeliver=true;
+    txt+=`👉${tech}：\n`;
+    dv.forEach(v=>{
+      const extras=(v.extraFees||[]).filter(f=>f.amount>0).map(f=>`${f.name}$${f.amount.toLocaleString()}`).join('、');
+      txt+=` ✅ ${v.plate}${extras?' ｜'+extras:''}${v.deliverNote?' ｜'+v.deliverNote:''}\n`;
+    });
+  });
+  if(!hasDeliver) txt+=` （無）\n`;
+
+  txt+=`\n⏰ 回報時間：${getNow()}`;
+
+  document.getElementById('reportContent').textContent=txt;
+}
+
+function copyReport(){
+  renderReport();
+  const text=document.getElementById('reportContent').textContent;
+  if(navigator.clipboard){navigator.clipboard.writeText(text).then(()=>showToast('✅ 已複製，貼到 LINE 群組吧！'));}
+  else{const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast('✅ 已複製，貼到 LINE 群組吧！');}
+}
+
+document.querySelectorAll('.modal-overlay').forEach(el=>{
+  el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});
+});
+
+init();
+</script>
+</body>
+</html>
