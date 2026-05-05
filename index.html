@@ -7,10 +7,10 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Bebas+Neue&display=swap');
   :root {
-    --bg:#0f0f0f; --surface:#1a1a1a; --surface2:#242424; --border:#2e2e2e;
-    --accent:#f5a623; --accent2:#e8380d; --green:#2ecc71; --blue:#3498db;
-    --text:#f0f0f0; --text2:#999; --radius:14px;
-    --ts:#f5a623; --tl:#3b9eff; --ta:#2ecc71;
+    --bg:#1a1a2e; --surface:#252540; --surface2:#2e2e50; --border:#3d3d6b;
+    --accent:#f5a623; --accent2:#e8380d; --green:#2ecc71; --blue:#4da6ff;
+    --text:#f0f0f0; --text2:#b0b0cc; --radius:14px;
+    --ts:#f5a623; --tl:#4da6ff; --ta:#2ecc71;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;min-height:100vh;max-width:480px;margin:0 auto;padding-bottom:120px;}
@@ -183,6 +183,9 @@
   .warn-banner{background:rgba(232,56,13,0.15);border:2px solid var(--accent2);border-radius:10px;padding:10px 14px;font-size:14px;color:var(--accent2);font-weight:700;margin-bottom:12px;display:none;}
   .warn-banner.visible{display:block;}
   .done-section-label{font-size:11px;font-weight:700;color:#666;letter-spacing:1px;margin:16px 0 8px;padding-left:2px;}
+  .tag-note-input{background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px;font-family:'Noto Sans TC',sans-serif;width:100%;outline:none;margin-top:4px;}
+  .tag-note-input:focus{border-color:var(--accent);}
+  .tag-note-input::placeholder{color:var(--text2);}
 </style>
 </head>
 <body>
@@ -224,12 +227,11 @@
 
 <!-- 整備車 -->
 <div class="page" id="page-prep">
-  <div class="section-title">搜尋車號</div>
+  <button class="btn-primary secondary" onclick="openAddPrepModal()" style="margin-bottom:14px;">＋ 新增整備車</button>
   <div class="search-box">
     <span class="search-icon">🔍</span>
-    <input type="text" id="prepSearch" placeholder="輸入車牌搜尋…" oninput="renderPrepList()">
+    <input type="text" id="prepSearch" placeholder="搜尋已新增車輛…" oninput="renderPrepList()">
   </div>
-  <button class="btn-primary secondary" onclick="openAddPrepModal()" style="margin-bottom:16px;">＋ 新增整備車</button>
   <div id="prepList"></div>
 </div>
 
@@ -294,7 +296,7 @@
 
 <script>
 // ===== GAS 端點（改成你的部署網址）=====
-const GAS_URL='https://script.google.com/macros/s/AKfycby153XHrjvbiKJiK0UNMf_co9KBi_UTiDPb17hx4TXCIdmsJyhtGfTlaI8UtFYoCFXbAQ/exec';
+const GAS_URL='__NEW_GAS_URL__';
 
 // 寫入 Notion（用 GET + URL 參數，避免 CORS 問題）
 function pushToNotion(payload){
@@ -303,7 +305,18 @@ function pushToNotion(payload){
   fetch(url,{method:'GET',mode:'no-cors'}).catch(()=>{});
 }
 
-const REPAIR_TAGS=['換機油','換齒輪油','換煞車皮','換前輪','換後輪','換皮帶','換電瓶','換空濾'];
+const REPAIR_TAGS=[
+  {key:'換機油',   label:'換機油',   note:false},
+  {key:'換齒輪油', label:'換齒輪油', note:false},
+  {key:'換煞車皮', label:'換煞車皮', note:false},
+  {key:'換前輪',   label:'換前輪',   note:false},
+  {key:'換後輪',   label:'換後輪',   note:false},
+  {key:'換皮帶',   label:'換皮帶',   note:false},
+  {key:'換電瓶',   label:'換電瓶',   note:false},
+  {key:'換空濾',   label:'換空濾',   note:false},
+  {key:'出保固',   label:'出保固 📋', note:true},
+  {key:'其他',     label:'其他 ✏️',  note:true},
+];
 const PREP_STAGES=[
   {key:'叫耗材',  label:'叫耗材',    sub:null},
   {key:'洗車',    label:'洗車',      sub:null},
@@ -325,7 +338,7 @@ let repairRecords=JSON.parse(localStorage.getItem('repairRecords')||'[]');
 let prepVehicles =JSON.parse(localStorage.getItem('prepVehicles') ||'[]');
 
 let rTechName='',rTechCls='';
-let selTags=[],itemAmounts={};
+let selTags=[],itemAmounts={},itemNotes={};
 let addTechName='',addTechCls='',addSelStages=new Set();
 let editTechName='',editTechCls='',editSelStages=new Set(),editingId=null;
 
@@ -374,30 +387,44 @@ function selModalTech(mode,name,cls,btn){
 function buildTagsGrid(){
   const g=document.getElementById('tagsGrid');g.innerHTML='';
   REPAIR_TAGS.forEach(tag=>{
-    const b=document.createElement('button');b.className='tag-btn';b.textContent=tag;
-    b.onclick=()=>toggleTag(tag,b);g.appendChild(b);
+    const b=document.createElement('button');
+    b.className='tag-btn';b.textContent=tag.label;
+    b.onclick=()=>toggleTag(tag.key,b);
+    g.appendChild(b);
   });
 }
-function toggleTag(tag,btn){
-  if(selTags.includes(tag)){selTags=selTags.filter(t=>t!==tag);delete itemAmounts[tag];btn.classList.remove('selected');}
-  else{selTags.push(tag);itemAmounts[tag]='';btn.classList.add('selected');}
+function toggleTag(key,btn){
+  if(selTags.includes(key)){
+    selTags=selTags.filter(t=>t!==key);
+    delete itemAmounts[key];delete itemNotes[key];
+    btn.classList.remove('selected');
+  } else {
+    selTags.push(key);itemAmounts[key]='';itemNotes[key]='';
+    btn.classList.add('selected');
+  }
   renderAmountList();
 }
 function renderAmountList(){
   const list=document.getElementById('itemAmountList');
   if(!selTags.length){list.innerHTML='';calcTotal();return;}
-  list.innerHTML=selTags.map(tag=>`
-    <div class="item-amount-row">
-      <div class="item-amount-name">${tag}</div>
-      <span class="item-amount-prefix">NT$</span>
-      <input class="item-amount-input" type="number" inputmode="numeric" placeholder="0"
-        value="${itemAmounts[tag]||''}"
-        oninput="itemAmounts['${tag}']=this.value;calcTotal()">
-    </div>`).join('');
+  list.innerHTML=selTags.map(key=>{
+    const tag=REPAIR_TAGS.find(t=>t.key===key)||{key,label:key,note:false};
+    const noteRow=tag.note?`<input class="tag-note-input" placeholder="${key==='出保固'?'保固備註…':'其他說明…'}" value="${(itemNotes[key]||'').replace(/"/g,'&quot;')}" oninput="itemNotes['${key}']=this.value">` : '';
+    return `<div class="item-amount-row" style="flex-wrap:wrap;gap:6px;">
+      <div class="item-amount-name" style="min-width:80px;">${tag.label}</div>
+      <div style="display:flex;align-items:center;gap:4px;margin-left:auto;">
+        <span class="item-amount-prefix">NT$</span>
+        <input class="item-amount-input" type="number" inputmode="numeric" placeholder="0"
+          value="${itemAmounts[key]||''}"
+          oninput="itemAmounts['${key}']=this.value;calcTotal()">
+      </div>
+      ${noteRow?`<div style="width:100%;">${noteRow}</div>`:''}
+    </div>`;
+  }).join('');
   calcTotal();
 }
 function calcTotal(){
-  const t=selTags.reduce((s,tag)=>s+(parseInt(itemAmounts[tag])||0),0);
+  const t=selTags.reduce((s,key)=>s+(parseInt(itemAmounts[key])||0),0);
   document.getElementById('itemTotal').textContent='NT$ '+t.toLocaleString();
 }
 function addRepairRecord(){
@@ -405,14 +432,17 @@ function addRepairRecord(){
   if(!rTechName){showToast('請選擇技師','#e8380d');return;}
   if(!plate){showToast('請輸入車牌','#e8380d');return;}
   if(!selTags.length){showToast('請選擇維修項目','#e8380d');return;}
-  const items=selTags.map(tag=>({name:tag,amount:parseInt(itemAmounts[tag])||0}));
+  const items=selTags.map(key=>{
+    const tag=REPAIR_TAGS.find(t=>t.key===key)||{key,label:key};
+    return {name:tag.label.replace(/[📋✏️]/g,'').trim(),amount:parseInt(itemAmounts[key])||0,note:itemNotes[key]||''};
+  });
   const total=items.reduce((s,i)=>s+i.amount,0);
   repairRecords.unshift({id:Date.now(),plate,tech:rTechName,techClass:rTechCls,items,total,time:getNow(),date:getToday()});
   save();
   // 寫入 Notion
   pushToNotion({action:'pushTech',type:'維修保養',plate,tech:rTechName,items,date:getToday()});
   document.getElementById('repairPlate').value='';
-  selTags=[];itemAmounts={};
+  selTags=[];itemAmounts={};itemNotes={};
   document.querySelectorAll('.tag-btn').forEach(b=>b.classList.remove('selected'));
   document.getElementById('itemAmountList').innerHTML='';
   document.getElementById('itemTotal').textContent='NT$ 0';
@@ -440,7 +470,7 @@ function renderRepairList(){
     tr.forEach(r=>{
       const ih=(r.items||[]).map(i=>`
         <div class="record-item-row">
-          <span class="record-item-name">${i.name}</span>
+          <span class="record-item-name">${i.name}${i.note?`<span style="color:var(--text2);font-size:12px;"> ／${i.note}</span>`:''}</span>
           <span class="record-item-amt ${i.amount===0?'zero':''}">${i.amount>0?'NT$'+i.amount.toLocaleString():'—'}</span>
         </div>`).join('');
       html+=`<div class="record-card">
