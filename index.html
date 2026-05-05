@@ -296,10 +296,10 @@
 
 <script>
 // ===== GAS 端點（改成你的部署網址）=====
-const GAS_URL='__NEW_GAS_URL__';
+const GAS_URL='https://script.google.com/macros/s/AKfycby_VOmBw8xb0cL0hY5CSeaJo8P0WmpRANorS8QKiaLtphzt_lUpIZ3JLCT04TVrA9p7ag/exec';
 
-// 寫入 Notion（用 GET + URL 參數，避免 CORS 問題）
-function pushToNotion(payload){
+// 寫入試算表（用 GET + URL 參數，避免 CORS 問題）
+function pushToSheets(payload){
   const params=encodeURIComponent(JSON.stringify(payload));
   const url=GAS_URL+'?action=pushTech&data='+params;
   fetch(url,{method:'GET',mode:'no-cors'}).catch(()=>{});
@@ -439,8 +439,8 @@ function addRepairRecord(){
   const total=items.reduce((s,i)=>s+i.amount,0);
   repairRecords.unshift({id:Date.now(),plate,tech:rTechName,techClass:rTechCls,items,total,time:getNow(),date:getToday()});
   save();
-  // 寫入 Notion
-  pushToNotion({action:'pushTech',type:'維修保養',plate,tech:rTechName,items,date:getToday()});
+  // 寫入試算表
+  pushToSheets({action:'pushTech',type:'維修保養',plate,tech:rTechName,items,date:getToday()});
   document.getElementById('repairPlate').value='';
   selTags=[];itemAmounts={};itemNotes={};
   document.querySelectorAll('.tag-btn').forEach(b=>b.classList.remove('selected'));
@@ -543,8 +543,8 @@ function savePrepVehicle(){
   const histEntry={date:getToday(),time:getNow(),tech:addTechName,techClass:addTechCls,stages,stageDetails,notes};
   prepVehicles.unshift({id:Date.now(),plate,tech:addTechName,techClass:addTechCls,stages,stageDetails,notes,history:[histEntry],status:'active',createdDate:getToday()});
   save();
-  // 寫入 Notion
-  pushToNotion({action:'pushTech',type:'整備車',plate,tech:addTechName,stages,note:notes,date:getToday()});
+  // 寫入試算表
+  pushToSheets({action:'pushTech',type:'整備車',plate,tech:addTechName,stages,note:notes,date:getToday()});
   closeModal('addPrepModal');renderPrepList();showToast('🏍️ 已新增 '+plate);
 }
 function openEditPrepModal(id){
@@ -571,8 +571,8 @@ function updatePrepVehicle(){
   if(notes) v.notes=(v.notes?v.notes+'\n'+notes:notes);
   v.history.push({date:getToday(),time:getNow(),tech:editTechName,techClass:editTechCls,stages,stageDetails,notes});
   save();
-  // 寫入 Notion
-  pushToNotion({action:'pushTech',type:'整備車',plate:v.plate,tech:editTechName,stages,note:notes,date:getToday()});
+  // 寫入試算表
+  pushToSheets({action:'pushTech',type:'整備車',plate:v.plate,tech:editTechName,stages,note:notes,date:getToday()});
   closeModal('editPrepModal');renderPrepList();showToast('✅ 已更新 '+v.plate);
 }
 function delPrep(id){prepVehicles=prepVehicles.filter(v=>v.id!==id);delete customFeeMap[id];save();renderPrepList();}
@@ -642,9 +642,9 @@ function doDeliver(vid){
   v.history.push({date:getToday(),time:getNow(),tech:dTechName,techClass:dTechCls,stages:['🏁 交車完成'],stageDetails:{},notes:note+feeStr});
   delete customFeeMap[vid];
   save();
-  // 寫入 Notion
+  // 寫入試算表
   const extraTotal=extraFees.reduce((s,f)=>s+(f.amount||0),0);
-  pushToNotion({action:'pushTech',type:'交車',plate:v.plate,tech:dTechName,extraFees,extraTotal,note,date:getToday()});
+  pushToSheets({action:'pushTech',type:'交車',plate:v.plate,tech:dTechName,extraFees,extraTotal,note,date:getToday()});
   renderPrepList();showToast('🏁 '+v.plate+' 交車完成！','#2ecc71');
 }
 
